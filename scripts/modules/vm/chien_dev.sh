@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ensure_chien_dev() {
-  require_command "chien-dev" "Install dev-environment-setup first; k3s-vm-lab uses chien-dev to create VM nodes."
+  require_command "chien-dev" "Install dev-environment-setup first; local-k3s uses chien-dev to create VM nodes."
 }
 
 ensure_multipass() {

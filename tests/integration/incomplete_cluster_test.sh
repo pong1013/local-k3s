@@ -13,11 +13,11 @@ cluster_dir="${K3S_VM_LAB_HOME}/generated/clusters/stale-lab"
 mkdir -p "${cluster_dir}"
 touch "${cluster_dir}/build.log"
 
-"${ROOT_DIR}/scripts/k3s-vm-lab" status >"${TMP_DIR}/status-list.out"
+"${ROOT_DIR}/scripts/local-k3s" status >"${TMP_DIR}/status-list.out"
 grep -q "stale-lab.*incomplete.*missing cluster.env" "${TMP_DIR}/status-list.out"
 
 set +e
-"${ROOT_DIR}/scripts/k3s-vm-lab" status stale-lab >"${TMP_DIR}/status.out" 2>&1
+"${ROOT_DIR}/scripts/local-k3s" status stale-lab >"${TMP_DIR}/status.out" 2>&1
 status=$?
 set -e
 
@@ -32,7 +32,7 @@ set +e
   printf '1\n'
   printf '1\n'
   printf 'n\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" build stale-lab >"${TMP_DIR}/build.out" 2>&1
+} | "${ROOT_DIR}/scripts/local-k3s" create stale-lab >"${TMP_DIR}/build.out" 2>&1
 status=$?
 set -e
 
@@ -42,7 +42,7 @@ if [[ "${status}" -eq 0 ]]; then
 fi
 grep -q "Cluster directory already exists" "${TMP_DIR}/build.out"
 
-printf 'y\n' | "${ROOT_DIR}/scripts/k3s-vm-lab" delete stale-lab >"${TMP_DIR}/delete.out"
+printf 'y\n' | "${ROOT_DIR}/scripts/local-k3s" delete stale-lab >"${TMP_DIR}/delete.out"
 test ! -e "${cluster_dir}"
 
 echo "incomplete cluster test passed"

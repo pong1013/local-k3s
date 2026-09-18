@@ -1,12 +1,13 @@
-# k3s-vm-lab
+# local-k3s
 
-`k3s-vm-lab` is a VM-backed local k3s lab installer. It creates Multipass VM nodes through `chien-dev`, installs a `1 server + N workers` k3s cluster, merges kubeconfig into `~/.kube/config`, optionally installs `fake-gpu-operator`, and writes a Markdown report.
+`local-k3s` is a VM-backed local k3s lab installer. It creates Multipass VM nodes through `chien-dev`, installs a `1 server + N workers` k3s cluster, merges kubeconfig into `~/.kube/config`, optionally installs `fake-gpu-operator`, and writes a Markdown report.
 
 This project is intentionally not a generic k3s builder. It is an all-in-one local lab package for people who do not want to prepare instances or VMs by hand.
 
 ## Requirements
 
 - macOS or Linux
+- Git (for installation)
 - `chien-dev` from [dev-environment-setup](https://github.com/pong1013/dev-environment-setup)
 - Multipass
 - OpenSSH client
@@ -19,20 +20,28 @@ One-command requirements setup is not included yet. For now, install the require
 
 ## Usage
 
-Run commands through `make` from the repo root:
+Install from GitHub:
 
 ```bash
-make k3s-vm-lab doctor
-make k3s-vm-lab build my-lab
-make k3s-vm-lab status my-lab
-make k3s-vm-lab status my-lab wide
-make k3s-vm-lab report my-lab
-make k3s-vm-lab start my-lab
-make k3s-vm-lab stop my-lab
-make k3s-vm-lab delete my-lab
+curl -fsSL https://raw.githubusercontent.com/pong1013/local-k3s/main/install.sh | bash
 ```
 
-During `build`, the CLI asks for:
+The installer checks out `main` under `~/.k3s-vm-lab` and links `~/.local/bin/local-k3s`. Add `~/.local/bin` to your `PATH` if the installer prompts you. Re-running the installer refreshes the checkout and preserves existing cluster data under `~/.k3s-vm-lab/generated`.
+
+Run commands from any directory:
+
+```bash
+local-k3s doctor
+local-k3s create my-lab
+local-k3s status my-lab
+local-k3s status my-lab wide
+local-k3s report my-lab
+local-k3s start my-lab
+local-k3s stop my-lab
+local-k3s delete my-lab
+```
+
+During `create`, the CLI asks for:
 
 - cluster name, if not provided in the command
 - total node count, including the fixed `1 control-plane/server` node
@@ -40,15 +49,15 @@ During `build`, the CLI asks for:
 - resource size for each node, with explicit CPU/RAM/disk values or custom values
 - whether to install `fake-gpu-operator` after the cluster is ready
 
-Example interactive build:
+Example interactive creation:
 
 ```text
-make k3s-vm-lab build my-lab
+local-k3s create my-lab
 
 ==============================================
- k3s-vm-lab | VM-backed local k3s lab
+ local-k3s | VM-backed local k3s lab
 ==============================================
-This build creates one k3s control-plane/server VM plus worker VMs.
+This command creates one k3s control-plane/server VM plus worker VMs.
 Total node count, including the control-plane/server (default=2):
 Select Ubuntu version for all VM nodes:
   1) 22.04
@@ -86,7 +95,7 @@ Node names are deterministic:
 | large | 4 CPU / 8G RAM / 40G disk |
 | custom | prompted CPU / RAM / disk |
 
-The build shows host CPU, RAM, and free disk before resource selection. It checks the sum of all node resources before creating VMs and reserves at least `2 CPU + 4G RAM + 20G disk` for the host.
+The create flow shows host CPU, RAM, and free disk before resource selection. It checks the sum of all node resources before creating VMs and reserves at least `2 CPU + 4G RAM + 20G disk` for the host.
 
 ## Start, Stop, and Delete Safety
 
@@ -95,8 +104,6 @@ The build shows host CPU, RAM, and free disk before resource selection. It check
 `stop` pauses the cluster VM nodes and records `stopped`. It keeps generated files, the cluster index entry, and kubeconfig entries intact.
 
 `delete` permanently deletes VM nodes, purges Multipass deleted instances, backs up `~/.kube/config`, removes only the kube context/cluster/user recorded in the k3s-vm-lab index, removes the index entry, and removes generated files.
-
-`destroy` is kept as an alias for `delete`.
 
 ## Generated Files
 

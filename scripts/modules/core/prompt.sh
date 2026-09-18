@@ -3,7 +3,7 @@
 print_header() {
   paint cyan "=============================================="
   echo ""
-  paint bold " k3s-vm-lab | VM-backed local k3s lab"
+  paint bold " local-k3s | VM-backed local k3s lab"
   echo ""
   paint cyan "=============================================="
   echo ""

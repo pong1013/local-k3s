@@ -36,7 +36,7 @@ case "${command}" in
   doctor)
     do_doctor "${@:2}"
     ;;
-  build)
+  create)
     do_build "${@:2}"
     ;;
   status)
@@ -53,9 +53,6 @@ case "${command}" in
     ;;
   delete)
     do_delete "${@:2}"
-    ;;
-  destroy)
-    do_destroy "${@:2}"
     ;;
   help|-h|--help)
     print_help

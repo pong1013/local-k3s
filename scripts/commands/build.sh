@@ -54,13 +54,13 @@ collect_build_inputs() {
   local role
 
   print_header
-  echo "This build creates one fixed k3s control-plane/server VM plus optional worker VMs." >&2
+  echo "This command creates one fixed k3s control-plane/server VM plus optional worker VMs." >&2
   CLUSTER_NAME="${provided_name:-$(prompt_text "Cluster name" "demo-lab")}"
   validate_cluster_name "${CLUSTER_NAME}"
 
   cluster_dir="$(cluster_dir_for "${CLUSTER_NAME}")"
   if [[ -e "${cluster_dir}" ]]; then
-    die "Cluster directory already exists: ${cluster_dir}. Refusing to build '${CLUSTER_NAME}'. Run 'make k3s-vm-lab delete ${CLUSTER_NAME}' or clean up the stale directory before building again."
+    die "Cluster directory already exists: ${cluster_dir}. Refusing to create '${CLUSTER_NAME}'. Run 'local-k3s delete ${CLUSTER_NAME}' or clean up the stale directory before building again."
   fi
 
   if find_cluster_index_by_name "${CLUSTER_NAME}"; then

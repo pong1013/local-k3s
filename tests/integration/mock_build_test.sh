@@ -23,7 +23,7 @@ printf 'apiVersion: v1\nkind: Config\n' > "${HOME}/.kube/config"
   printf '1\n'
   printf '1\n'
   printf 'n\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" build >/tmp/k3s-vm-lab-test.out
+} | "${ROOT_DIR}/scripts/local-k3s" create >/tmp/k3s-vm-lab-test.out
 
 test -f "${K3S_VM_LAB_HOME}/generated/clusters/mock-lab/report.md"
 test -f "${K3S_VM_LAB_HOME}/generated/clusters/mock-lab/kubeconfig"

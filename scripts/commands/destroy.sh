@@ -65,7 +65,7 @@ do_stop() {
   local env_file
 
   if [[ -z "${cluster_name}" ]]; then
-    die "Usage: k3s-vm-lab stop <cluster-name>"
+    die "Usage: local-k3s stop <cluster-name>"
   fi
 
   validate_cluster_name "${cluster_name}"
@@ -74,7 +74,7 @@ do_stop() {
   env_file="$(cluster_env_for "${cluster_name}")"
   [[ -d "${cluster_dir}" ]] || die "Cluster '${cluster_name}' not found."
 
-  [[ -f "${env_file}" ]] || die "Cluster '${cluster_name}' is incomplete: missing ${env_file}. Run 'make k3s-vm-lab delete ${cluster_name}' to clean it."
+  [[ -f "${env_file}" ]] || die "Cluster '${cluster_name}' is incomplete: missing ${env_file}. Run 'local-k3s delete ${cluster_name}' to clean it."
 
   load_cluster_env "${cluster_name}"
 
@@ -125,7 +125,7 @@ do_start() {
   local env_file
 
   if [[ -z "${cluster_name}" ]]; then
-    die "Usage: k3s-vm-lab start <cluster-name>"
+    die "Usage: local-k3s start <cluster-name>"
   fi
 
   validate_cluster_name "${cluster_name}"
@@ -133,7 +133,7 @@ do_start() {
   nodes_file="$(nodes_file_for "${cluster_name}")"
   env_file="$(cluster_env_for "${cluster_name}")"
   [[ -d "${cluster_dir}" ]] || die "Cluster '${cluster_name}' not found."
-  [[ -f "${env_file}" ]] || die "Cluster '${cluster_name}' is incomplete: missing ${env_file}. Run 'make k3s-vm-lab delete ${cluster_name}' to clean it."
+  [[ -f "${env_file}" ]] || die "Cluster '${cluster_name}' is incomplete: missing ${env_file}. Run 'local-k3s delete ${cluster_name}' to clean it."
 
   load_cluster_env "${cluster_name}"
 
@@ -179,7 +179,6 @@ do_start() {
 
 do_delete() {
   local cluster_name="${1:-}"
-  local command_name="${2:-delete}"
   local nodes_file
   local node_name
   local role
@@ -193,7 +192,7 @@ do_delete() {
   local kube_backup
 
   if [[ -z "${cluster_name}" ]]; then
-    die "Usage: k3s-vm-lab ${command_name} <cluster-name>"
+    die "Usage: local-k3s delete <cluster-name>"
   fi
 
   validate_cluster_name "${cluster_name}"
@@ -250,8 +249,4 @@ do_delete() {
   remove_cluster_index_entry "${cluster_name}"
   rm -rf "${cluster_dir}"
   log_success "Cluster '${cluster_name}' deleted."
-}
-
-do_destroy() {
-  do_delete "${1:-}" "destroy"
 }
