@@ -67,6 +67,18 @@ elif [[ "${args[*]}" == *"-n fake-gpu-operator get pods --no-headers"* && "${MOC
     exit 0
   fi
   echo "fake-gpu-pod 1/1 Running"
+elif [[ "${args[*]}" == *"-n monitoring get pods --no-headers"* ]]; then
+  echo "monitoring-mock 1/1 Running"
+elif [[ "${args[*]}" == *"-n monitoring get pods"* ]]; then
+  echo "NAME READY STATUS"
+elif [[ "${args[*]}" == *"-n monitoring get deployments"* ]]; then
+  echo "NAME READY UP-TO-DATE AVAILABLE AGE"
+elif [[ "${args[*]}" == *"-n monitoring get statefulsets"* ]]; then
+  echo "NAME READY AGE"
+elif [[ "${args[*]}" == *"-n monitoring get events"* ]]; then
+  echo "LAST SEEN TYPE REASON"
+elif [[ "${args[*]}" == *"-n monitoring describe pods"* ]]; then
+  echo "Name: monitoring-mock"
 elif [[ "${args[*]}" == *"-n fake-gpu-operator get pods --no-headers"* ]]; then
   echo "fake-gpu-pod 1/1 Running"
 elif [[ "${args[*]}" == *"-n fake-gpu-operator get deployment -o name"* ]]; then

@@ -54,13 +54,13 @@ collect_build_inputs() {
   local role
 
   print_header
-  echo "This build creates one fixed k3s control-plane/server VM plus optional worker VMs." >&2
+  echo "This command creates one fixed k3s control-plane/server VM plus optional worker VMs." >&2
   CLUSTER_NAME="${provided_name:-$(prompt_text "Cluster name" "demo-lab")}"
   validate_cluster_name "${CLUSTER_NAME}"
 
   cluster_dir="$(cluster_dir_for "${CLUSTER_NAME}")"
   if [[ -e "${cluster_dir}" ]]; then
-    die "Cluster directory already exists: ${cluster_dir}. Refusing to build '${CLUSTER_NAME}'. Run 'make k3s-vm-lab delete ${CLUSTER_NAME}' or clean up the stale directory before building again."
+    die "Cluster directory already exists: ${cluster_dir}. Refusing to create '${CLUSTER_NAME}'. Run 'local-k3s delete ${CLUSTER_NAME}' or clean up the stale directory before building again."
   fi
 
   if find_cluster_index_by_name "${CLUSTER_NAME}"; then
@@ -113,6 +113,12 @@ collect_build_inputs() {
     FAKE_GPU_ENABLED="false"
   fi
   FAKE_GPU_STATUS="disabled"
+  if prompt_yes_no "Install the Prometheus monitoring stack (Prometheus, Grafana, Alertmanager, Operator)?" "n"; then
+    MONITORING_ENABLED="true"
+  else
+    MONITORING_ENABLED="false"
+  fi
+  MONITORING_STATUS="disabled"
 }
 
 setup_build_logging() {
@@ -161,6 +167,9 @@ do_build() {
   collect_build_inputs "${provided_name}"
   if [[ "${FAKE_GPU_ENABLED}" == "true" ]]; then
     require_command "helm" "Install Helm before selecting fake-gpu-operator."
+  fi
+  if [[ "${MONITORING_ENABLED}" == "true" ]]; then
+    require_command "helm" "Install Helm before selecting the Prometheus monitoring stack."
   fi
   ensure_node_capacity NODE_CPUS NODE_MEMS NODE_DISKS "${TOTAL_NODE_COUNT}"
 
@@ -249,6 +258,31 @@ do_build() {
     fi
   fi
 
+  if [[ "${MONITORING_ENABLED}" == "true" ]]; then
+    progress_step "Installing Prometheus monitoring stack"
+    if install_monitoring_stack "${KUBECONFIG_PATH}"; then
+      MONITORING_STATUS="installed"
+    else
+      MONITORING_STATUS="failed"
+      log_console_warn "Prometheus monitoring install failed. Diagnostics are in $(log_file_for "${CLUSTER_NAME}")."
+      if ! prompt_keep_cluster_after_monitoring_failure; then
+        log_console_step "Deleting newly created cluster ${CLUSTER_NAME}"
+        trap - EXIT INT TERM
+        if ! delete_new_cluster_after_monitoring_failure created_nodes "${cluster_dir}"; then
+          BUILD_STATUS="failed"
+          write_cluster_env "${CLUSTER_NAME}" || true
+          update_cluster_index_status "${CLUSTER_NAME}" "${BUILD_STATUS}" || true
+          render_report "${CLUSTER_NAME}" || true
+          log_console_error "Could not fully delete ${CLUSTER_NAME}; managed records were retained for recovery."
+          exit 1
+        fi
+        log_console_info "Cluster ${CLUSTER_NAME} was deleted."
+        exit 1
+      fi
+      log_console_warn "Keeping cluster ${CLUSTER_NAME} with monitoring status failed."
+    fi
+  fi
+
   progress_step "Merging kubeconfig into ${HOME}/.kube/config"
   KUBECONFIG_BACKUP="$(merge_kubeconfig "${KUBECONFIG_PATH}" "${KUBE_CONTEXT}")"
   progress_step "Reading k3s version"
@@ -261,6 +295,7 @@ do_build() {
 
   trap - EXIT INT TERM
   progress_success "Cluster ${CLUSTER_NAME} is ready."
+  log_console_info "Prometheus monitoring: ${MONITORING_STATUS}"
   log_console_info "Report: $(report_file_for "${CLUSTER_NAME}")"
   log_info "Report: $(report_file_for "${CLUSTER_NAME}")"
 }

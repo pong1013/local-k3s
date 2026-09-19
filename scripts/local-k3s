@@ -21,6 +21,7 @@ source "${SCRIPT_DIR}/modules/vm/ssh.sh"
 source "${SCRIPT_DIR}/modules/cluster/k3s.sh"
 source "${SCRIPT_DIR}/modules/cluster/kubeconfig.sh"
 source "${SCRIPT_DIR}/modules/addons/fake_gpu.sh"
+source "${SCRIPT_DIR}/modules/addons/monitoring.sh"
 source "${SCRIPT_DIR}/modules/cluster/report.sh"
 source "${SCRIPT_DIR}/modules/cluster/cleanup.sh"
 source "${SCRIPT_DIR}/modules/core/help.sh"
@@ -29,6 +30,7 @@ source "${SCRIPT_DIR}/commands/build.sh"
 source "${SCRIPT_DIR}/commands/status.sh"
 source "${SCRIPT_DIR}/commands/report.sh"
 source "${SCRIPT_DIR}/commands/destroy.sh"
+source "${SCRIPT_DIR}/commands/update.sh"
 
 command="${1:-help}"
 
@@ -36,7 +38,7 @@ case "${command}" in
   doctor)
     do_doctor "${@:2}"
     ;;
-  build)
+  create)
     do_build "${@:2}"
     ;;
   status)
@@ -54,8 +56,8 @@ case "${command}" in
   delete)
     do_delete "${@:2}"
     ;;
-  destroy)
-    do_destroy "${@:2}"
+  update)
+    do_update "${@:2}"
     ;;
   help|-h|--help)
     print_help

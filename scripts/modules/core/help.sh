@@ -2,31 +2,31 @@
 
 print_help() {
   cat <<'EOF'
-k3s-vm-lab - VM-backed local k3s lab installer
+local-k3s - VM-backed local k3s lab installer
 
 Usage:
-  make k3s-vm-lab doctor
-  make k3s-vm-lab build [cluster-name]
-  make k3s-vm-lab status [cluster-name] [wide]
-  make k3s-vm-lab report [cluster-name]
-  make k3s-vm-lab start <cluster-name>
-  make k3s-vm-lab stop <cluster-name>
-  make k3s-vm-lab delete <cluster-name>
-  make k3s-vm-lab destroy <cluster-name>
-  make k3s-vm-lab help
+  local-k3s doctor
+  local-k3s create [cluster-name]
+  local-k3s status [cluster-name] [wide]
+  local-k3s report [cluster-name]
+  local-k3s start <cluster-name>
+  local-k3s stop <cluster-name>
+  local-k3s delete <cluster-name>
+  local-k3s update
+  local-k3s help
 
 Topology:
-  build creates 1 fixed control-plane/server VM plus optional workers.
+  create creates 1 fixed control-plane/server VM plus optional workers.
   You choose the total node count, including the server.
 
 Commands:
   doctor   Check required local tools and host resources.
-  build    Create Multipass VM nodes through chien-dev, install k3s, merge kubeconfig, and write a report.
+  create   Create Multipass VM nodes through chien-dev, install k3s, merge kubeconfig, and write a report.
   status   Show formatted VM and Kubernetes status for a cluster; add wide for raw node details.
   report   Show a formatted terminal report and keep report.md on disk.
   start    Start stopped cluster VMs and wait for Kubernetes nodes to become Ready.
   stop     Stop cluster VMs without deleting generated files or kubeconfig entries.
   delete   Delete cluster VMs, kubeconfig entries, index entry, and generated files.
-  destroy  Alias for delete.
+  update   Compare the installed checkout with remote main and update it when changed.
 EOF
 }

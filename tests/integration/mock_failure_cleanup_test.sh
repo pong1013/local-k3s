@@ -23,7 +23,7 @@ set +e
   printf '1\n'
   printf '1\n'
   printf 'n\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" build >/tmp/k3s-vm-lab-failure-test.out 2>&1
+} | "${ROOT_DIR}/scripts/local-k3s" create >/tmp/k3s-vm-lab-failure-test.out 2>&1
 status=$?
 set -e
 

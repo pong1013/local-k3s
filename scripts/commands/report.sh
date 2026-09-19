@@ -5,7 +5,7 @@ do_report() {
   local report_file
 
   if [[ -z "${cluster_name}" ]]; then
-    die "Usage: k3s-vm-lab report <cluster-name>"
+    die "Usage: local-k3s report <cluster-name>"
   fi
 
   validate_cluster_name "${cluster_name}"

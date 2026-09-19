@@ -3,7 +3,7 @@
 do_doctor() {
   local failed="false"
 
-  log_info "Running k3s-vm-lab doctor checks"
+  log_info "Running local-k3s doctor checks"
   echo ""
 
   doctor_check_command "chien-dev" "required" || failed="true"

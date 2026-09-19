@@ -25,7 +25,7 @@ printf 'apiVersion: v1\nkind: Config\n' > "${HOME}/.kube/config"
   printf '1\n'
   printf '1\n'
   printf 'n\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" build indexed-lab >"${TMP_DIR}/build.out"
+} | "${ROOT_DIR}/scripts/local-k3s" create indexed-lab >"${TMP_DIR}/build.out"
 
 index_file="${K3S_VM_LAB_HOME}/generated/clusters.tsv"
 cluster_dir="${K3S_VM_LAB_HOME}/generated/clusters/indexed-lab"
@@ -36,7 +36,7 @@ grep -q "CLUSTER_ID=abcd1234" "${cluster_dir}/cluster.env"
 grep -q "KUBE_CONTEXT=${context}" "${cluster_dir}/cluster.env"
 
 set +e
-"${ROOT_DIR}/scripts/k3s-vm-lab" build indexed-lab >"${TMP_DIR}/build-again.out" 2>&1
+"${ROOT_DIR}/scripts/local-k3s" create indexed-lab >"${TMP_DIR}/build-again.out" 2>&1
 status=$?
 set -e
 if [[ "${status}" -eq 0 ]]; then
@@ -48,7 +48,7 @@ grep -q "Cluster directory already exists" "${TMP_DIR}/build-again.out"
 {
   printf 'y\n'
   printf 'y\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" delete indexed-lab >"${TMP_DIR}/delete.out"
+} | "${ROOT_DIR}/scripts/local-k3s" delete indexed-lab >"${TMP_DIR}/delete.out"
 
 test ! -e "${cluster_dir}"
 test ! -e "${index_file}"
@@ -66,7 +66,7 @@ export K3S_VM_LAB_CLUSTER_ID="feed9876"
   printf '1\n'
   printf '1\n'
   printf 'n\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" build stale-lab >"${TMP_DIR}/stale-build.out"
+} | "${ROOT_DIR}/scripts/local-k3s" create stale-lab >"${TMP_DIR}/stale-build.out"
 grep -q $'feed9876\tstale-lab\tk3s-vm-lab-stale-lab-feed9876\tready' "${index_file}"
 
 export K3S_VM_LAB_CLUSTER_ID="9999aaaa"
@@ -77,7 +77,7 @@ set +e
   printf '1\n'
   printf '1\n'
   printf 'n\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" build blocked-lab >"${TMP_DIR}/blocked.out" 2>&1
+} | "${ROOT_DIR}/scripts/local-k3s" create blocked-lab >"${TMP_DIR}/blocked.out" 2>&1
 status=$?
 set -e
 if [[ "${status}" -eq 0 ]]; then

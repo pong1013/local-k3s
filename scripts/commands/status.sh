@@ -8,7 +8,7 @@ load_cluster_env() {
   env_file="$(cluster_env_for "${cluster_name}")"
   if [[ ! -f "${env_file}" ]]; then
     if [[ -d "${cluster_dir}" ]]; then
-      die "Cluster '${cluster_name}' is incomplete: missing ${env_file}. Run 'make k3s-vm-lab delete ${cluster_name}' to clean it, then build again."
+      die "Cluster '${cluster_name}' is incomplete: missing ${env_file}. Run 'local-k3s delete ${cluster_name}' to clean it, then create again."
     fi
     die "Cluster '${cluster_name}' not found. Expected ${env_file}"
   fi
@@ -78,7 +78,7 @@ do_status() {
   local status_text
 
   if [[ "${cluster_name}" == "--wide" || "${cluster_name}" == "wide" || -n "${extra}" || ( -n "${wide}" && "${wide}" != "--wide" && "${wide}" != "wide" ) ]]; then
-    die "Usage: k3s-vm-lab status [cluster-name] [wide|--wide]"
+    die "Usage: local-k3s status [cluster-name] [wide|--wide]"
   fi
 
   if [[ -z "${cluster_name}" ]]; then

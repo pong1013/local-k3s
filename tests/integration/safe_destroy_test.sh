@@ -26,7 +26,7 @@ printf 'apiVersion: v1\nkind: Config\n' > "${HOME}/.kube/config"
   printf '1\n'
   printf '1\n'
   printf 'n\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" build >"${TMP_DIR}/build.out"
+} | "${ROOT_DIR}/scripts/local-k3s" create >"${TMP_DIR}/build.out"
 
 cluster_dir="${K3S_VM_LAB_HOME}/generated/clusters/destroy-lab"
 index_file="${K3S_VM_LAB_HOME}/generated/clusters.tsv"
@@ -34,7 +34,7 @@ context="$(grep '^KUBE_CONTEXT=' "${cluster_dir}/cluster.env" | cut -d= -f2-)"
 
 {
   printf 'y\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" stop destroy-lab >"${TMP_DIR}/stop.out"
+} | "${ROOT_DIR}/scripts/local-k3s" stop destroy-lab >"${TMP_DIR}/stop.out"
 
 test -d "${cluster_dir}"
 test -f "${index_file}"
@@ -44,19 +44,19 @@ grep -q "stop destroy-lab-worker-1" "${MOCK_MULTIPASS_LOG}"
 ! grep -q "delete-context ${context}" "${MOCK_KUBECTL_LOG}"
 
 before_status_get_nodes="$(grep -c 'get nodes -o wide' "${MOCK_KUBECTL_LOG}" || true)"
-"${ROOT_DIR}/scripts/k3s-vm-lab" status >"${TMP_DIR}/status-list.out"
+"${ROOT_DIR}/scripts/local-k3s" status >"${TMP_DIR}/status-list.out"
 grep -q "destroy-lab.*stopped" "${TMP_DIR}/status-list.out"
 after_status_get_nodes="$(grep -c 'get nodes -o wide' "${MOCK_KUBECTL_LOG}" || true)"
 test "${before_status_get_nodes}" = "${after_status_get_nodes}"
 
-printf 'y\n' | "${ROOT_DIR}/scripts/k3s-vm-lab" start destroy-lab >"${TMP_DIR}/start.out"
+printf 'y\n' | "${ROOT_DIR}/scripts/local-k3s" start destroy-lab >"${TMP_DIR}/start.out"
 
 grep -q "BUILD_STATUS=ready" "${cluster_dir}/cluster.env"
 grep -q "start destroy-lab-server-1" "${MOCK_MULTIPASS_LOG}"
 grep -q "start destroy-lab-worker-1" "${MOCK_MULTIPASS_LOG}"
 grep -q "Cluster 'destroy-lab' VM nodes are started" "${TMP_DIR}/start.out"
 
-printf 'y\n' | "${ROOT_DIR}/scripts/k3s-vm-lab" delete destroy-lab >"${TMP_DIR}/delete-stopped.out"
+printf 'y\n' | "${ROOT_DIR}/scripts/local-k3s" delete destroy-lab >"${TMP_DIR}/delete-stopped.out"
 
 test ! -e "${cluster_dir}"
 grep -q "delete destroy-lab-server-1" "${MOCK_MULTIPASS_LOG}"
@@ -70,11 +70,11 @@ grep -q "delete-context ${context}" "${MOCK_KUBECTL_LOG}"
   printf '1\n'
   printf '1\n'
   printf 'n\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" build >"${TMP_DIR}/delete-build.out"
+} | "${ROOT_DIR}/scripts/local-k3s" create >"${TMP_DIR}/delete-build.out"
 delete_dir="${K3S_VM_LAB_HOME}/generated/clusters/delete-lab"
 delete_context="$(grep '^KUBE_CONTEXT=' "${delete_dir}/cluster.env" | cut -d= -f2-)"
 
-printf 'y\n' | "${ROOT_DIR}/scripts/k3s-vm-lab" delete delete-lab >"${TMP_DIR}/delete-ready.out"
+printf 'y\n' | "${ROOT_DIR}/scripts/local-k3s" delete delete-lab >"${TMP_DIR}/delete-ready.out"
 
 test ! -e "${delete_dir}"
 grep -q "delete delete-lab-server-1" "${MOCK_MULTIPASS_LOG}"
@@ -86,13 +86,19 @@ grep -q "delete-context ${delete_context}" "${MOCK_KUBECTL_LOG}"
   printf '1\n'
   printf '1\n'
   printf 'n\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" build >"${TMP_DIR}/alias-build.out"
+} | "${ROOT_DIR}/scripts/local-k3s" create >"${TMP_DIR}/alias-build.out"
 alias_dir="${K3S_VM_LAB_HOME}/generated/clusters/alias-lab"
 
-printf 'y\n' | "${ROOT_DIR}/scripts/k3s-vm-lab" destroy alias-lab >"${TMP_DIR}/destroy-alias.out"
+if "${ROOT_DIR}/scripts/local-k3s" destroy alias-lab >"${TMP_DIR}/destroy-alias.out" 2>&1; then
+  echo "destroy alias unexpectedly succeeded" >&2
+  exit 1
+fi
+test -e "${alias_dir}"
+grep -q "Unknown command: destroy" "${TMP_DIR}/destroy-alias.out"
+printf 'y\n' | "${ROOT_DIR}/scripts/local-k3s" delete alias-lab >"${TMP_DIR}/alias-delete.out"
 
 test ! -e "${alias_dir}"
-grep -q "Cluster 'alias-lab' deleted" "${TMP_DIR}/destroy-alias.out"
+grep -q "Cluster 'alias-lab' deleted" "${TMP_DIR}/alias-delete.out"
 
 legacy_dir="${K3S_VM_LAB_HOME}/generated/clusters/legacy-lab"
 mkdir -p "${legacy_dir}"
@@ -117,7 +123,7 @@ printf 'legacy-lab-server-1\tserver\t10.0.0.50\t2\t2G\t20G\n' > "${legacy_dir}/n
 
 {
   printf 'y\n'
-} | "${ROOT_DIR}/scripts/k3s-vm-lab" delete legacy-lab >"${TMP_DIR}/legacy-delete.out" 2>&1
+} | "${ROOT_DIR}/scripts/local-k3s" delete legacy-lab >"${TMP_DIR}/legacy-delete.out" 2>&1
 
 test ! -e "${legacy_dir}"
 grep -q "adopting legacy metadata" "${TMP_DIR}/legacy-delete.out"
