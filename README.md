@@ -1,6 +1,6 @@
 # local-k3s
 
-`local-k3s` is a VM-backed local k3s lab installer. It creates Multipass VM nodes through `chien-dev`, installs a `1 server + N workers` k3s cluster, merges kubeconfig into `~/.kube/config`, optionally installs `fake-gpu-operator`, and writes a Markdown report.
+`local-k3s` is a VM-backed local k3s lab installer. It creates Multipass VM nodes through `chien-dev`, installs a `1 server + N workers` k3s cluster, merges kubeconfig into `~/.kube/config`, optionally installs `fake-gpu-operator` and Prometheus monitoring, and writes a Markdown report.
 
 This project is intentionally not a generic k3s builder. It is an all-in-one local lab package for people who do not want to prepare instances or VMs by hand.
 
@@ -12,7 +12,7 @@ This project is intentionally not a generic k3s builder. It is an all-in-one loc
 - Multipass
 - OpenSSH client
 - `kubectl`
-- `helm` if installing `fake-gpu-operator`
+- `helm` if installing `fake-gpu-operator` or Prometheus monitoring
 
 Windows and WSL are not officially supported in the first version.
 
@@ -57,6 +57,11 @@ During `create`, the CLI asks for:
 - Ubuntu version for every VM node
 - resource size for each node, with explicit CPU/RAM/disk values or custom values
 - whether to install `fake-gpu-operator` after the cluster is ready
+- whether to install the Prometheus monitoring stack after the cluster is ready
+
+The monitoring choice installs Prometheus Community's `kube-prometheus-stack` Helm chart in the `monitoring` namespace. It includes Prometheus, Grafana, Alertmanager, and the Prometheus Operator. This choice is independent of `fake-gpu-operator`; both can be selected or skipped separately. The stack needs enough cluster memory and disk for its workloads. The CLI records monitoring as `disabled`, `installed`, or `failed` in `cluster.env` and in terminal and Markdown reports.
+
+If installation or readiness fails, the build log contains namespace diagnostics and the CLI asks whether to keep the newly created cluster. Press Enter to keep it for debugging. Answer `n` to permanently delete only that cluster's newly created VMs and generated records; the create command then exits with an error.
 
 Example interactive creation:
 

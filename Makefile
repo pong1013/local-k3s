@@ -16,3 +16,4 @@ test: syntax
 	@./tests/integration/safe_destroy_test.sh
 	@./tests/integration/fake_gpu_failure_test.sh
 	@./tests/integration/fake_gpu_wait_test.sh
+	@./tests/integration/monitoring_test.sh
