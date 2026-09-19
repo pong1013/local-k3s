@@ -12,6 +12,7 @@ Usage:
   local-k3s start <cluster-name>
   local-k3s stop <cluster-name>
   local-k3s delete <cluster-name>
+  local-k3s update
   local-k3s help
 
 Topology:
@@ -26,5 +27,6 @@ Commands:
   start    Start stopped cluster VMs and wait for Kubernetes nodes to become Ready.
   stop     Stop cluster VMs without deleting generated files or kubeconfig entries.
   delete   Delete cluster VMs, kubeconfig entries, index entry, and generated files.
+  update   Compare the installed checkout with remote main and update it when changed.
 EOF
 }

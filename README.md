@@ -39,7 +39,16 @@ local-k3s report my-lab
 local-k3s start my-lab
 local-k3s stop my-lab
 local-k3s delete my-lab
+local-k3s update
 ```
+
+`local-k3s update` fetches `origin/main` for the installed checkout (by default,
+`~/.k3s-vm-lab`) and prints the installed and remote commit IDs. If the
+revisions differ, it aligns the installed checkout with remote `main`. This
+overwrites local changes to tracked files, including local commits, while
+keeping untracked cluster data under `generated/`. If fetching fails, the
+command exits with an error and leaves the installed revision unchanged. Set
+`K3S_VM_LAB_INSTALL_DIR` to use a non-default installation directory.
 
 During `create`, the CLI asks for:
 

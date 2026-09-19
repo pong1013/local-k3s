@@ -7,6 +7,7 @@ syntax:
 
 test: syntax
 	@./tests/integration/global_cli_test.sh
+	@./tests/integration/update_test.sh
 	@./tests/integration/mock_build_test.sh
 	@./tests/integration/mock_failure_cleanup_test.sh
 	@./tests/integration/incomplete_cluster_test.sh
