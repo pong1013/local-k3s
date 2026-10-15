@@ -65,7 +65,7 @@ grep -q 'old-lab.*stopped' "${TMP_DIR}/status.out"
   printf '1\n'
   printf '1\n'
   printf '1\n'
-  printf 'n\n'
+  printf '\n'
 } | "${command_path}" create new-lab >"${TMP_DIR}/create.out" 2>&1
 test -f "${install_dir}/generated/clusters/new-lab/cluster.env"
 grep -q '^BUILD_STATUS=ready$' "${install_dir}/generated/clusters/new-lab/cluster.env"

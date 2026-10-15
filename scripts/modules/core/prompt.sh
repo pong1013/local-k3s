@@ -61,3 +61,48 @@ prompt_yes_no() {
 
   [[ "${answer}" =~ ^[Yy]$ ]]
 }
+
+# Return selected option numbers, one per line; keep all UI on stderr.
+prompt_multi_choice() {
+  local prompt="$1"
+  shift
+  local options=("$@")
+  local tokens=()
+  local selected=" "
+  local answer token i valid
+
+  paint cyan "${prompt}" >&2
+  echo "" >&2
+  for ((i=0; i<${#options[@]}; i++)); do
+    echo "  $((i+1))) ${options[$i]}" >&2
+  done
+
+  while true; do
+    if ! IFS= read -r -p "$(paint cyan "Enter option numbers (space-separated; Enter skips all)" 2): " answer; then
+      echo "Add-on selection cancelled: input ended." >&2
+      return 1
+    fi
+    IFS=$' \t' read -r -a tokens <<< "${answer}"
+    selected=" "
+    valid=true
+    for token in ${tokens[@]+"${tokens[@]}"}; do
+      # Compare strings rather than evaluating user input as shell arithmetic.
+      valid=false
+      for ((i=1; i<=${#options[@]}; i++)); do
+        if [[ "${token}" == "${i}" ]]; then
+          valid=true
+          [[ "${selected}" == *" ${i} "* ]] || selected+="${i} "
+          break
+        fi
+      done
+      [[ "${valid}" == true ]] || break
+    done
+    if [[ "${valid}" == true ]]; then
+      for ((i=1; i<=${#options[@]}; i++)); do
+        [[ "${selected}" != *" ${i} "* ]] || printf '%s\n' "${i}"
+      done
+      return 0
+    fi
+    echo "Invalid option, please try again. Enter numbers separated by spaces." >&2
+  done
+}

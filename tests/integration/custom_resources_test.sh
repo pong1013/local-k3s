@@ -29,7 +29,7 @@ printf 'apiVersion: v1\nkind: Config\n' > "${HOME}/.kube/config"
   printf '2\n'
   printf '3G\n'
   printf '25G\n'
-  printf 'n\n'
+  printf '\n'
 } | "${ROOT_DIR}/scripts/local-k3s" create >"${TMP_DIR}/build.out"
 
 nodes_file="${K3S_VM_LAB_HOME}/generated/clusters/custom-lab/nodes.tsv"

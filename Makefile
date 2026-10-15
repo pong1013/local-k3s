@@ -17,3 +17,4 @@ test: syntax
 	@./tests/integration/fake_gpu_failure_test.sh
 	@./tests/integration/fake_gpu_wait_test.sh
 	@./tests/integration/monitoring_test.sh
+	@./tests/integration/optional_addons_test.sh

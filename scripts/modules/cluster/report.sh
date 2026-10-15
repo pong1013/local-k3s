@@ -21,6 +21,8 @@ write_cluster_env() {
     printf "FAKE_GPU_STATUS=%q\n" "${FAKE_GPU_STATUS}"
     printf "MONITORING_ENABLED=%q\n" "${MONITORING_ENABLED:-false}"
     printf "MONITORING_STATUS=%q\n" "${MONITORING_STATUS:-disabled}"
+    printf "CERT_MANAGER_ENABLED=%q\n" "${CERT_MANAGER_ENABLED:-false}"
+    printf "CERT_MANAGER_STATUS=%q\n" "${CERT_MANAGER_STATUS:-disabled}"
     printf "K3S_VERSION=%q\n" "${K3S_VERSION}"
     printf "BUILD_STATUS=%q\n" "${BUILD_STATUS}"
     printf "CREATED_AT=%q\n" "${CREATED_AT}"
@@ -69,6 +71,7 @@ render_report() {
     echo "- Local cluster kubeconfig copy: ${KUBECONFIG_PATH}"
     echo "- fake-gpu-operator: ${FAKE_GPU_STATUS}"
     echo "- Prometheus monitoring: ${MONITORING_STATUS:-disabled}"
+    echo "- cert-manager: ${CERT_MANAGER_STATUS:-disabled}"
     echo ""
     echo "## Nodes"
     echo ""
@@ -120,6 +123,8 @@ print_report_terminal() {
   printf "%-18s %s\n" "k3s:" "${K3S_VERSION:-unknown}"
   printf "%-18s %s\n" "fake GPU:" "$(paint_status "${FAKE_GPU_STATUS}")"
   printf "%-18s %s\n" "Monitoring:" "$(paint_status "${MONITORING_STATUS:-disabled}")"
+
+  printf "%-18s %s\n" "cert-manager:" "$(paint_status "${CERT_MANAGER_STATUS:-disabled}")"
 
   echo ""
   paint bold "Paths"

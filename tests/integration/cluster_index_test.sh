@@ -24,7 +24,7 @@ printf 'apiVersion: v1\nkind: Config\n' > "${HOME}/.kube/config"
   printf '1\n'
   printf '1\n'
   printf '1\n'
-  printf 'n\n'
+  printf '\n'
 } | "${ROOT_DIR}/scripts/local-k3s" create indexed-lab >"${TMP_DIR}/build.out"
 
 index_file="${K3S_VM_LAB_HOME}/generated/clusters.tsv"
@@ -65,7 +65,7 @@ export K3S_VM_LAB_CLUSTER_ID="feed9876"
   printf '1\n'
   printf '1\n'
   printf '1\n'
-  printf 'n\n'
+  printf '\n'
 } | "${ROOT_DIR}/scripts/local-k3s" create stale-lab >"${TMP_DIR}/stale-build.out"
 grep -q $'feed9876\tstale-lab\tk3s-vm-lab-stale-lab-feed9876\tready' "${index_file}"
 
@@ -76,7 +76,7 @@ set +e
   printf '1\n'
   printf '1\n'
   printf '1\n'
-  printf 'n\n'
+  printf '\n'
 } | "${ROOT_DIR}/scripts/local-k3s" create blocked-lab >"${TMP_DIR}/blocked.out" 2>&1
 status=$?
 set -e

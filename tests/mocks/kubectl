@@ -98,6 +98,9 @@ elif [[ "${args[*]}" == *"-n fake-gpu-operator rollout status"* ]]; then
 elif [[ "${args[*]}" == *"-n fake-gpu-operator wait"* && "${MOCK_FAKE_GPU_WAIT_FAIL:-false}" == "true" ]]; then
   echo "mock fake-gpu wait failure" >&2
   exit 1
+elif [[ "${args[*]}" == *"-n cert-manager rollout status"* && "${MOCK_CERT_MANAGER_READINESS_FAIL:-false}" == true ]]; then
+  echo 'mock cert-manager readiness failure' >&2
+  exit 1
 elif [[ "${args[*]}" == wait* ]]; then
   exit 0
 elif [[ "${args[*]}" == *"-n fake-gpu-operator get pods"* ]]; then

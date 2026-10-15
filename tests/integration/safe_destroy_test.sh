@@ -25,7 +25,7 @@ printf 'apiVersion: v1\nkind: Config\n' > "${HOME}/.kube/config"
   printf '1\n'
   printf '1\n'
   printf '1\n'
-  printf 'n\n'
+  printf '\n'
 } | "${ROOT_DIR}/scripts/local-k3s" create >"${TMP_DIR}/build.out"
 
 cluster_dir="${K3S_VM_LAB_HOME}/generated/clusters/destroy-lab"
@@ -69,7 +69,7 @@ grep -q "delete-context ${context}" "${MOCK_KUBECTL_LOG}"
   printf '1\n'
   printf '1\n'
   printf '1\n'
-  printf 'n\n'
+  printf '\n'
 } | "${ROOT_DIR}/scripts/local-k3s" create >"${TMP_DIR}/delete-build.out"
 delete_dir="${K3S_VM_LAB_HOME}/generated/clusters/delete-lab"
 delete_context="$(grep '^KUBE_CONTEXT=' "${delete_dir}/cluster.env" | cut -d= -f2-)"
@@ -85,7 +85,7 @@ grep -q "delete-context ${delete_context}" "${MOCK_KUBECTL_LOG}"
   printf '1\n'
   printf '1\n'
   printf '1\n'
-  printf 'n\n'
+  printf '\n'
 } | "${ROOT_DIR}/scripts/local-k3s" create >"${TMP_DIR}/alias-build.out"
 alias_dir="${K3S_VM_LAB_HOME}/generated/clusters/alias-lab"
 

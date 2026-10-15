@@ -1,6 +1,6 @@
 # local-k3s
 
-`local-k3s` is a VM-backed local k3s lab installer. It creates Multipass VM nodes through `chien-dev`, installs a `1 server + N workers` k3s cluster, merges kubeconfig into `~/.kube/config`, optionally installs `fake-gpu-operator` and Prometheus monitoring, and writes a Markdown report.
+`local-k3s` is a VM-backed local k3s lab installer. It creates Multipass VM nodes through `chien-dev`, installs a `1 server + N workers` k3s cluster, merges kubeconfig into `~/.kube/config`, optionally installs `fake-gpu-operator`, Prometheus monitoring, and cert-manager, and writes a Markdown report.
 
 This project is intentionally not a generic k3s builder. It is an all-in-one local lab package for people who do not want to prepare instances or VMs by hand.
 
@@ -12,7 +12,7 @@ This project is intentionally not a generic k3s builder. It is an all-in-one loc
 - Multipass
 - OpenSSH client
 - `kubectl`
-- `helm` if installing `fake-gpu-operator` or Prometheus monitoring
+- `helm` if installing any optional add-on (`fake-gpu-operator`, Prometheus monitoring, or cert-manager)
 
 Windows and WSL are not officially supported in the first version.
 
@@ -56,12 +56,17 @@ During `create`, the CLI asks for:
 - total node count, including the fixed `1 control-plane/server` node
 - Ubuntu version for every VM node
 - resource size for each node, with explicit CPU/RAM/disk values or custom values
-- whether to install `fake-gpu-operator` after the cluster is ready
-- whether to install the Prometheus monitoring stack after the cluster is ready
+- which optional add-ons to install after the cluster is ready, in one numbered multi-select
 
-The monitoring choice installs Prometheus Community's `kube-prometheus-stack` Helm chart in the `monitoring` namespace. It includes Prometheus, Grafana, Alertmanager, and the Prometheus Operator. This choice is independent of `fake-gpu-operator`; both can be selected or skipped separately. The stack needs enough cluster memory and disk for its workloads. The CLI records monitoring as `disabled`, `installed`, or `failed` in `cluster.env` and in terminal and Markdown reports.
+Enter space-separated numbers such as `1 3` to select Fake GPU Operator and cert-manager. Press Enter to skip all add-ons. Repeated numbers select an add-on only once; any invalid entry rejects the entire selection and asks again. Selection ends cleanly with an error on EOF before VM creation. Add-ons install in menu order, regardless of the order entered. Helm is checked before creating VMs when any add-on is selected.
 
-If installation or readiness fails, the build log contains namespace diagnostics and the CLI asks whether to keep the newly created cluster. Press Enter to keep it for debugging. Answer `n` to permanently delete only that cluster's newly created VMs and generated records; the create command then exits with an error.
+The monitoring choice installs Prometheus Community's `kube-prometheus-stack` Helm chart in the `monitoring` namespace. It includes Prometheus, Grafana, Alertmanager, and the Prometheus Operator. Every add-on can be selected or skipped independently. The stack needs enough cluster memory and disk for its workloads. The CLI records monitoring as `disabled`, `installed`, or `failed` in `cluster.env` and in terminal and Markdown reports.
+
+If monitoring installation or readiness fails, the build log contains namespace diagnostics and the CLI asks whether to keep the newly created cluster. Press Enter to keep it for debugging. Answer `n` to permanently delete only that cluster's newly created VMs and generated records; the create command then exits with an error.
+
+The cert-manager choice installs the [official cert-manager Helm chart](https://cert-manager.io/docs/installation/helm/) from `oci://quay.io/jetstack/charts/cert-manager` in the `cert-manager` namespace, including its CRDs. Installation waits for Helm readiness and its startup API check hook, component deployment rollouts, and CRD establishment. The CLI records `CERT_MANAGER_ENABLED` and `CERT_MANAGER_STATUS` (`disabled`, `installed`, or `failed`) in `cluster.env`, and displays the result in terminal and Markdown reports. Older cluster records without these fields are treated as disabled.
+
+If cert-manager installation or readiness fails, the cluster is kept, the result is marked `failed`, and namespace diagnostics are written to the build log. This option installs cert-manager only: it does not create an Issuer/ClusterIssuer, request certificates, configure domains, or establish local certificate trust. Configure an [Issuer](https://cert-manager.io/docs/configuration/) separately before requesting certificates.
 
 Example interactive creation:
 
@@ -90,7 +95,11 @@ Select resource size:
   3) large - 4 CPU / 8G RAM / 40G disk
   4) custom - enter CPU, RAM, and disk
 Enter option number: 1
-Install fake-gpu-operator after the cluster is ready? [y/N]:
+Select optional add-ons:
+  1) Fake GPU Operator — simulate GPU resources
+  2) Monitoring Stack (Prometheus, Grafana, Alertmanager, Operator)
+  3) cert-manager — TLS certificate management
+Enter option numbers (space-separated; Enter skips all): 1 3
 ```
 
 Node names are deterministic:
