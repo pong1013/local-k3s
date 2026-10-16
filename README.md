@@ -42,31 +42,36 @@ local-k3s delete my-lab
 local-k3s update
 ```
 
-`local-k3s update` fetches `origin/main` for the installed checkout (by default,
-`~/.k3s-vm-lab`) and prints the installed and remote commit IDs. If the
-revisions differ, it aligns the installed checkout with remote `main`. This
-overwrites local changes to tracked files, including local commits, while
-keeping untracked cluster data under `generated/`. If fetching fails, the
-command exits with an error and leaves the installed revision unchanged. Set
-`K3S_VM_LAB_INSTALL_DIR` to use a non-default installation directory.
+| Command | Description |
+| --- | --- |
+| `local-k3s doctor` | Check required tools and host prerequisites. |
+| `local-k3s create my-lab` | Interactively configure and create a cluster. |
+| `local-k3s status my-lab` | Show cluster and Kubernetes health. |
+| `local-k3s status my-lab wide` | Show status with additional Kubernetes node details. |
+| `local-k3s report my-lab` | Show the saved cluster configuration, paths, and useful commands. |
+| `local-k3s start my-lab` | Start the cluster VMs and wait for Kubernetes nodes to become Ready. |
+| `local-k3s stop my-lab` | Stop the cluster VMs while preserving cluster data and kubeconfig. |
+| `local-k3s delete my-lab` | Permanently delete the cluster VMs, generated files, and managed kubeconfig entries. |
+| `local-k3s update` | Fetch `origin/main`, show installed and remote commit IDs, and align the installed checkout when they differ. Overwrites tracked local changes and local commits; preserves untracked cluster data under `generated/`. A fetch failure leaves the installed revision unchanged. |
 
-During `create`, the CLI asks for:
+The installed checkout defaults to `~/.k3s-vm-lab`; set `K3S_VM_LAB_INSTALL_DIR` to use a different directory for `update`.
 
-- cluster name, if not provided in the command
-- total node count, including the fixed `1 control-plane/server` node
-- Ubuntu version for every VM node
-- resource size for each node, with explicit CPU/RAM/disk values or custom values
-- which optional add-ons to install after the cluster is ready, in one numbered multi-select
+### During `create`, the CLI asks for
 
-Enter space-separated numbers such as `1 3` to select Fake GPU Operator and cert-manager. Press Enter to skip all add-ons. Repeated numbers select an add-on only once; any invalid entry rejects the entire selection and asks again. Selection ends cleanly with an error on EOF before VM creation. Add-ons install in menu order, regardless of the order entered. Helm is checked before creating VMs when any add-on is selected.
+**Required cluster settings**
 
-The monitoring choice installs Prometheus Community's `kube-prometheus-stack` Helm chart in the `monitoring` namespace. It includes Prometheus, Grafana, Alertmanager, and the Prometheus Operator. Every add-on can be selected or skipped independently. The stack needs enough cluster memory and disk for its workloads. The CLI records monitoring as `disabled`, `installed`, or `failed` in `cluster.env` and in terminal and Markdown reports.
+- Cluster name, if not provided in the command.
+- Total node count, including the fixed `1 control-plane/server` node.
+- Ubuntu version for all VM nodes.
+- Resource size for each node: CPU, RAM, and disk, using a preset or custom values.
 
-If monitoring installation or readiness fails, the build log contains namespace diagnostics and the CLI asks whether to keep the newly created cluster. Press Enter to keep it for debugging. Answer `n` to permanently delete only that cluster's newly created VMs and generated records; the create command then exits with an error.
+**Optional add-ons — one multi-select question**
 
-The cert-manager choice installs the [official cert-manager Helm chart](https://cert-manager.io/docs/installation/helm/) from `oci://quay.io/jetstack/charts/cert-manager` in the `cert-manager` namespace, including its CRDs. Installation waits for Helm readiness and its startup API check hook, component deployment rollouts, and CRD establishment. The CLI records `CERT_MANAGER_ENABLED` and `CERT_MANAGER_STATUS` (`disabled`, `installed`, or `failed`) in `cluster.env`, and displays the result in terminal and Markdown reports. Older cluster records without these fields are treated as disabled.
+- Fake GPU Operator
+- Monitoring Stack (Prometheus, Grafana, Alertmanager, Operator)
+- cert-manager
 
-If cert-manager installation or readiness fails, the cluster is kept, the result is marked `failed`, and namespace diagnostics are written to the build log. This option installs cert-manager only: it does not create an Issuer/ClusterIssuer, request certificates, configure domains, or establish local certificate trust. Configure an [Issuer](https://cert-manager.io/docs/configuration/) separately before requesting certificates.
+Enter space-separated numbers such as `1 3`, or press Enter to skip all add-ons. Selected add-ons require Helm. See the cluster report for installation results and the build log for diagnostics.
 
 Example interactive creation:
 
