@@ -12,6 +12,8 @@ load_cluster_env() {
     fi
     die "Cluster '${cluster_name}' not found. Expected ${env_file}"
   fi
+  CERT_MANAGER_ENABLED="false"
+  CERT_MANAGER_STATUS="disabled"
   # shellcheck disable=SC1090
   source "${env_file}"
   CLUSTER_ID="${CLUSTER_ID:-unknown}"

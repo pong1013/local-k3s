@@ -22,7 +22,7 @@ set +e
   printf '1\n'
   printf '1\n'
   printf '1\n'
-  printf 'n\n'
+  printf '\n'
 } | "${ROOT_DIR}/scripts/local-k3s" create >/tmp/k3s-vm-lab-failure-test.out 2>&1
 status=$?
 set -e

@@ -31,7 +31,7 @@ set +e
 {
   printf '1\n'
   printf '1\n'
-  printf 'n\n'
+  printf '\n'
 } | "${ROOT_DIR}/scripts/local-k3s" create stale-lab >"${TMP_DIR}/build.out" 2>&1
 status=$?
 set -e

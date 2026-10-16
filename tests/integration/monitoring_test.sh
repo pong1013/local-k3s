@@ -63,11 +63,10 @@ prepare_case() {
 
 create_case() {
   local name="$1"
-  local gpu_answer="$2"
-  local monitoring_answer="$3"
-  local failure_answer="${4:-}"
+  local addons="$2"
+  local failure_answer="${3:-}"
   if {
-    printf '%s\n' "$name" 1 1 1 "$gpu_answer" "$monitoring_answer"
+    printf '%s\n' "$name" 1 1 1 "$addons"
     if [[ -n "$failure_answer" ]]; then
       printf '%s\n' "$failure_answer"
     fi
@@ -79,7 +78,7 @@ create_case() {
 }
 
 prepare_case skipped
-create_case skipped n n
+create_case skipped ''
 cluster_dir="${K3S_VM_LAB_HOME}/generated/clusters/skipped"
 grep -q '^MONITORING_STATUS=disabled$' "${cluster_dir}/cluster.env"
 grep -qi 'monitoring: disabled' "${cluster_dir}/report.md"
@@ -88,7 +87,7 @@ test ! -s "${MOCK_HELM_LOG}"
 grep -qi 'monitoring:.*disabled' "${TMP_DIR}/skipped-report.out"
 
 prepare_case installed
-create_case installed n y
+create_case installed 2
 cluster_dir="${K3S_VM_LAB_HOME}/generated/clusters/installed"
 grep -q '^MONITORING_STATUS=installed$' "${cluster_dir}/cluster.env"
 grep -qi 'monitoring: installed' "${cluster_dir}/report.md"
@@ -103,14 +102,14 @@ grep -q '^FAKE_GPU_STATUS=disabled$' "${cluster_dir}/cluster.env"
 
 prepare_case completed-job
 export MOCK_MONITORING_COMPLETED_JOB=true
-create_case completed-job n y
+create_case completed-job 2
 cluster_dir="${K3S_VM_LAB_HOME}/generated/clusters/completed-job"
 grep -q '^MONITORING_STATUS=installed$' "${cluster_dir}/cluster.env"
 grep -qi 'monitoring: installed' "${cluster_dir}/report.md"
 
 prepare_case keep
 export MOCK_MONITORING_FAIL=true
-create_case keep n y ''
+create_case keep 2 ''
 cluster_dir="${K3S_VM_LAB_HOME}/generated/clusters/keep"
 grep -q '^BUILD_STATUS=ready$' "${cluster_dir}/cluster.env"
 grep -q '^MONITORING_STATUS=failed$' "${cluster_dir}/cluster.env"
@@ -123,7 +122,7 @@ prepare_case removed
 export MOCK_MONITORING_FAIL=true
 mkdir -p "${K3S_VM_LAB_HOME}/generated/clusters/unrelated"
 printf 'sentinel\n' > "${K3S_VM_LAB_HOME}/generated/clusters/unrelated/sentinel"
-create_case removed n y n
+create_case removed 2 n
 test ! -d "${K3S_VM_LAB_HOME}/generated/clusters/removed"
 test -f "${K3S_VM_LAB_HOME}/generated/clusters/unrelated/sentinel"
 ! grep -q $'\tremoved\t' "${K3S_VM_LAB_HOME}/generated/clusters.tsv" 2>/dev/null

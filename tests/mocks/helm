@@ -3,4 +3,8 @@ set -euo pipefail
 if [[ -n "${MOCK_HELM_LOG:-}" ]]; then
   printf "%s\n" "$*" >> "${MOCK_HELM_LOG}"
 fi
+if [[ "${MOCK_CERT_MANAGER_FAIL:-false}" == true && "$*" == *cert-manager* ]]; then
+  echo 'mock cert-manager Helm failure' >&2
+  exit 1
+fi
 exit 0

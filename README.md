@@ -1,6 +1,6 @@
 # local-k3s
 
-`local-k3s` is a VM-backed local k3s lab installer. It creates Multipass VM nodes through `chien-dev`, installs a `1 server + N workers` k3s cluster, merges kubeconfig into `~/.kube/config`, optionally installs `fake-gpu-operator` and Prometheus monitoring, and writes a Markdown report.
+`local-k3s` is a VM-backed local k3s lab installer. It creates Multipass VM nodes through `chien-dev`, installs a `1 server + N workers` k3s cluster, merges kubeconfig into `~/.kube/config`, optionally installs `fake-gpu-operator`, Prometheus monitoring, and cert-manager, and writes a Markdown report.
 
 This project is intentionally not a generic k3s builder. It is an all-in-one local lab package for people who do not want to prepare instances or VMs by hand.
 
@@ -12,7 +12,7 @@ This project is intentionally not a generic k3s builder. It is an all-in-one loc
 - Multipass
 - OpenSSH client
 - `kubectl`
-- `helm` if installing `fake-gpu-operator` or Prometheus monitoring
+- `helm` if installing any optional add-on (`fake-gpu-operator`, Prometheus monitoring, or cert-manager)
 
 Windows and WSL are not officially supported in the first version.
 
@@ -42,26 +42,36 @@ local-k3s delete my-lab
 local-k3s update
 ```
 
-`local-k3s update` fetches `origin/main` for the installed checkout (by default,
-`~/.k3s-vm-lab`) and prints the installed and remote commit IDs. If the
-revisions differ, it aligns the installed checkout with remote `main`. This
-overwrites local changes to tracked files, including local commits, while
-keeping untracked cluster data under `generated/`. If fetching fails, the
-command exits with an error and leaves the installed revision unchanged. Set
-`K3S_VM_LAB_INSTALL_DIR` to use a non-default installation directory.
+| Command | Description |
+| --- | --- |
+| `local-k3s doctor` | Check required tools and host prerequisites. |
+| `local-k3s create my-lab` | Interactively configure and create a cluster. |
+| `local-k3s status my-lab` | Show cluster and Kubernetes health. |
+| `local-k3s status my-lab wide` | Show status with additional Kubernetes node details. |
+| `local-k3s report my-lab` | Show the saved cluster configuration, paths, and useful commands. |
+| `local-k3s start my-lab` | Start the cluster VMs and wait for Kubernetes nodes to become Ready. |
+| `local-k3s stop my-lab` | Stop the cluster VMs while preserving cluster data and kubeconfig. |
+| `local-k3s delete my-lab` | Permanently delete the cluster VMs, generated files, and managed kubeconfig entries. |
+| `local-k3s update` | Fetch `origin/main`, show installed and remote commit IDs, and align the installed checkout when they differ. Overwrites tracked local changes and local commits; preserves untracked cluster data under `generated/`. A fetch failure leaves the installed revision unchanged. |
 
-During `create`, the CLI asks for:
+The installed checkout defaults to `~/.k3s-vm-lab`; set `K3S_VM_LAB_INSTALL_DIR` to use a different directory for `update`.
 
-- cluster name, if not provided in the command
-- total node count, including the fixed `1 control-plane/server` node
-- Ubuntu version for every VM node
-- resource size for each node, with explicit CPU/RAM/disk values or custom values
-- whether to install `fake-gpu-operator` after the cluster is ready
-- whether to install the Prometheus monitoring stack after the cluster is ready
+### During `create`, the CLI asks for
 
-The monitoring choice installs Prometheus Community's `kube-prometheus-stack` Helm chart in the `monitoring` namespace. It includes Prometheus, Grafana, Alertmanager, and the Prometheus Operator. This choice is independent of `fake-gpu-operator`; both can be selected or skipped separately. The stack needs enough cluster memory and disk for its workloads. The CLI records monitoring as `disabled`, `installed`, or `failed` in `cluster.env` and in terminal and Markdown reports.
+**Required cluster settings**
 
-If installation or readiness fails, the build log contains namespace diagnostics and the CLI asks whether to keep the newly created cluster. Press Enter to keep it for debugging. Answer `n` to permanently delete only that cluster's newly created VMs and generated records; the create command then exits with an error.
+- Cluster name, if not provided in the command.
+- Total node count, including the fixed `1 control-plane/server` node.
+- Ubuntu version for all VM nodes.
+- Resource size for each node: CPU, RAM, and disk, using a preset or custom values.
+
+**Optional add-ons — one multi-select question**
+
+- Fake GPU Operator
+- Monitoring Stack (Prometheus, Grafana, Alertmanager, Operator)
+- cert-manager
+
+Enter space-separated numbers such as `1 3`, or press Enter to skip all add-ons. Selected add-ons require Helm. See the cluster report for installation results and the build log for diagnostics.
 
 Example interactive creation:
 
@@ -90,7 +100,11 @@ Select resource size:
   3) large - 4 CPU / 8G RAM / 40G disk
   4) custom - enter CPU, RAM, and disk
 Enter option number: 1
-Install fake-gpu-operator after the cluster is ready? [y/N]:
+Select optional add-ons:
+  1) Fake GPU Operator — simulate GPU resources
+  2) Monitoring Stack (Prometheus, Grafana, Alertmanager, Operator)
+  3) cert-manager — TLS certificate management
+Enter option numbers (space-separated; Enter skips all): 1 3
 ```
 
 Node names are deterministic:

@@ -107,18 +107,24 @@ collect_build_inputs() {
     NODE_DISKS+=("${SELECTED_DISK}")
   done
 
-  if prompt_yes_no "Install fake-gpu-operator after the cluster is ready?" "n"; then
-    FAKE_GPU_ENABLED="true"
-  else
-    FAKE_GPU_ENABLED="false"
-  fi
+  local addons addon
+  addons="$(prompt_multi_choice "Select optional add-ons:" \
+    "Fake GPU Operator — simulate GPU resources" \
+    "Monitoring Stack (Prometheus, Grafana, Alertmanager, Operator)" \
+    "cert-manager — TLS certificate management")" || die "Build cancelled during add-on selection."
+  FAKE_GPU_ENABLED="false"
+  MONITORING_ENABLED="false"
+  CERT_MANAGER_ENABLED="false"
   FAKE_GPU_STATUS="disabled"
-  if prompt_yes_no "Install the Prometheus monitoring stack (Prometheus, Grafana, Alertmanager, Operator)?" "n"; then
-    MONITORING_ENABLED="true"
-  else
-    MONITORING_ENABLED="false"
-  fi
   MONITORING_STATUS="disabled"
+  CERT_MANAGER_STATUS="disabled"
+  while IFS= read -r addon; do
+    case "${addon}" in
+      1) FAKE_GPU_ENABLED="true" ;;
+      2) MONITORING_ENABLED="true" ;;
+      3) CERT_MANAGER_ENABLED="true" ;;
+    esac
+  done <<< "${addons}"
 }
 
 setup_build_logging() {
@@ -170,6 +176,9 @@ do_build() {
   fi
   if [[ "${MONITORING_ENABLED}" == "true" ]]; then
     require_command "helm" "Install Helm before selecting the Prometheus monitoring stack."
+  fi
+  if [[ "${CERT_MANAGER_ENABLED}" == "true" ]]; then
+    require_command "helm" "Install Helm before selecting cert-manager."
   fi
   ensure_node_capacity NODE_CPUS NODE_MEMS NODE_DISKS "${TOTAL_NODE_COUNT}"
 
@@ -283,6 +292,17 @@ do_build() {
     fi
   fi
 
+  if [[ "${CERT_MANAGER_ENABLED}" == "true" ]]; then
+    progress_step "Installing cert-manager"
+    if install_cert_manager "${KUBECONFIG_PATH}"; then
+      CERT_MANAGER_STATUS="installed"
+    else
+      CERT_MANAGER_STATUS="failed"
+      log_console_warn "cert-manager install failed; cluster will be kept. See $(log_file_for "${CLUSTER_NAME}") for diagnostics."
+      log_warn "cert-manager install failed; continuing with cluster ready for debugging."
+    fi
+  fi
+
   progress_step "Merging kubeconfig into ${HOME}/.kube/config"
   KUBECONFIG_BACKUP="$(merge_kubeconfig "${KUBECONFIG_PATH}" "${KUBE_CONTEXT}")"
   progress_step "Reading k3s version"
@@ -296,6 +316,7 @@ do_build() {
   trap - EXIT INT TERM
   progress_success "Cluster ${CLUSTER_NAME} is ready."
   log_console_info "Prometheus monitoring: ${MONITORING_STATUS}"
+  log_console_info "cert-manager: ${CERT_MANAGER_STATUS}"
   log_console_info "Report: $(report_file_for "${CLUSTER_NAME}")"
   log_info "Report: $(report_file_for "${CLUSTER_NAME}")"
 }

@@ -23,7 +23,7 @@ printf 'apiVersion: v1\nkind: Config\n' > "${HOME}/.kube/config"
   printf '1\n'
   printf '1\n'
   printf '1\n'
-  printf 'y\n'
+  printf '1\n'
 } | "${ROOT_DIR}/scripts/local-k3s" create >"${TMP_DIR}/build.out" 2>&1
 
 cluster_dir="${K3S_VM_LAB_HOME}/generated/clusters/gpu-fail-lab"
