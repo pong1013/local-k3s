@@ -208,11 +208,26 @@ do_build() {
     if (( status == 0 )); then
       return 0
     fi
+    # IP discovery may have failed before the normal node record was written.
+    # Retain every created node so a failed cleanup can be retried by delete.
+    local created_index created_node created_role
+    for ((created_index=0; created_index<${#created_nodes[@]}; created_index++)); do
+      created_node="${created_nodes[created_index]}"
+      if ! awk -F '\t' -v name="${created_node}" '$1 == name { found=1 } END { exit !found }' "${nodes_file}"; then
+        created_role="worker"
+        [[ "${created_node}" != "${SERVER_NAME}" ]] || created_role="server"
+        append_node_record "${CLUSTER_NAME}" "${created_node}" "${created_role}" "N/A" \
+          "${NODE_CPUS[created_index]}" "${NODE_MEMS[created_index]}" "${NODE_DISKS[created_index]}" || true
+      fi
+    done
     BUILD_STATUS="failed"
     write_cluster_env "${CLUSTER_NAME}" || true
     update_cluster_index_status "${CLUSTER_NAME}" "${BUILD_STATUS}" || true
     render_report "${CLUSTER_NAME}" || true
-    cleanup_created_nodes created_nodes
+    if ! cleanup_created_nodes created_nodes; then
+      log_console_error "Some VM environments could not be cleaned; records retained. Retry: local-k3s delete ${CLUSTER_NAME}"
+      log_error "Some VM environments could not be cleaned; records retained for retry."
+    fi
     log_console_error "Build failed. Log retained at $(log_file_for "${CLUSTER_NAME}")"
     log_error "Build failed. Log retained at $(log_file_for "${CLUSTER_NAME}")"
     exit "${status}"

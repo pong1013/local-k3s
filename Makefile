@@ -14,6 +14,7 @@ test: syntax
 	@./tests/integration/cluster_index_test.sh
 	@./tests/integration/custom_resources_test.sh
 	@./tests/integration/safe_destroy_test.sh
+	@./tests/integration/chien_dev_cleanup_test.sh
 	@./tests/integration/fake_gpu_failure_test.sh
 	@./tests/integration/fake_gpu_wait_test.sh
 	@./tests/integration/monitoring_test.sh

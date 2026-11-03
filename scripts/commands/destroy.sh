@@ -195,6 +195,8 @@ do_delete() {
     die "Usage: local-k3s delete <cluster-name>"
   fi
 
+  ensure_chien_dev
+  ensure_multipass
   validate_cluster_name "${cluster_name}"
   cluster_dir="$(cluster_dir_for "${cluster_name}")"
   nodes_file="$(nodes_file_for "${cluster_name}")"
@@ -207,11 +209,9 @@ do_delete() {
       log_info "Delete cancelled."
       return 0
     fi
-    if [[ -f "${nodes_file}" ]]; then
-      while IFS=$'\t' read -r node_name role ip cpus memory disk; do
-        delete_vm_node_required "${node_name}"
-      done < "${nodes_file}"
-      purge_deleted_vms
+    if ! cleanup_recorded_nodes "${nodes_file}"; then
+      log_error "Could not fully clean cluster '${cluster_name}'; records retained. Retry: local-k3s delete ${cluster_name}"
+      return 1
     fi
     rm -rf "${cluster_dir}"
     remove_cluster_index_entry "${cluster_name}"
@@ -237,11 +237,9 @@ do_delete() {
   update_cluster_index_status "${cluster_name}" "${BUILD_STATUS}"
   render_report "${cluster_name}" || true
 
-  if [[ -f "${nodes_file}" ]]; then
-    while IFS=$'\t' read -r node_name role ip cpus memory disk; do
-      delete_vm_node_required "${node_name}"
-    done < "${nodes_file}"
-    purge_deleted_vms
+  if ! cleanup_recorded_nodes "${nodes_file}"; then
+    log_error "Could not fully clean cluster '${cluster_name}'; records and kubeconfig retained. Retry: local-k3s delete ${cluster_name}"
+    return 1
   fi
 
   kube_backup="$(remove_kubeconfig_identity "${delete_kube_context}")"

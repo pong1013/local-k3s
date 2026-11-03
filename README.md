@@ -131,7 +131,11 @@ The create flow shows host CPU, RAM, and free disk before resource selection. It
 
 `stop` pauses the cluster VM nodes and records `stopped`. It keeps generated files, the cluster index entry, and kubeconfig entries intact.
 
-`delete` permanently deletes VM nodes, purges Multipass deleted instances, backs up `~/.kube/config`, removes only the kube context/cluster/user recorded in the k3s-vm-lab index, removes the index entry, and removes generated files.
+`delete` stops existing VM nodes and calls `chien-dev clean <node>` for every recorded node, including nodes whose VM is already missing. The cluster deletion confirmation authorizes these per-node cleanups, so you are not prompted again for each node. This removes both the VMs and their chien-dev environment records instead of deleting VMs directly through Multipass.
+
+If stopping or cleaning a node fails, cleanup continues for the other nodes and the command returns failure. Cluster metadata, the node list, and kubeconfig entries are retained; resolve the reported error and retry `local-k3s delete <cluster-name>`. Only after all node cleanups succeed does deletion back up `~/.kube/config`, remove the managed kube context/cluster/user and index entry, and remove generated cluster files. Incomplete cluster deletion and cleanup after a failed build use the same node cleanup flow.
+
+A chien-dev version that rejects cleanup of a missing VM with `Unknown backend 'vm'` still causes cleanup to fail. Fix or update chien-dev separately, then retry; local-k3s retains recovery records and does not fall back to direct Multipass deletion.
 
 ## Generated Files
 

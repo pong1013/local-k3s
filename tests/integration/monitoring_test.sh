@@ -43,6 +43,7 @@ export K3S_VM_LAB_HOST_CPUS=16
 export K3S_VM_LAB_HOST_MEM_GB=64
 export K3S_VM_LAB_HOST_DISK_GB=500
 export MOCK_HELM_LOG="${TMP_DIR}/helm.log"
+export MOCK_CHIEN_DEV_LOG="${TMP_DIR}/chien-dev.log"
 export MOCK_MULTIPASS_LOG="${TMP_DIR}/multipass.log"
 export MOCK_MULTIPASS_COMMANDS="${TMP_DIR}/multipass-commands.log"
 export MOCK_MULTIPASS_DELEGATE="${ROOT_DIR}/tests/mocks/multipass"
@@ -55,6 +56,7 @@ prepare_case() {
   mkdir -p "${HOME}/.kube" "${K3S_VM_LAB_HOME}/generated/clusters"
   printf 'apiVersion: v1\nkind: Config\n' > "${HOME}/.kube/config"
   : > "${MOCK_HELM_LOG}"
+  : > "${MOCK_CHIEN_DEV_LOG}"
   : > "${MOCK_MULTIPASS_LOG}"
   : > "${MOCK_MULTIPASS_COMMANDS}"
   unset MOCK_MONITORING_FAIL
@@ -126,7 +128,24 @@ create_case removed 2 n
 test ! -d "${K3S_VM_LAB_HOME}/generated/clusters/removed"
 test -f "${K3S_VM_LAB_HOME}/generated/clusters/unrelated/sentinel"
 ! grep -q $'\tremoved\t' "${K3S_VM_LAB_HOME}/generated/clusters.tsv" 2>/dev/null
-grep -Eq '^delete (.* )?removed-server-1$' "${MOCK_MULTIPASS_COMMANDS}"
+grep -qx 'clean removed-server-1' "${MOCK_CHIEN_DEV_LOG}"
 ! grep -Eq '^delete .*unrelated|^purge$' "${MOCK_MULTIPASS_COMMANDS}"
+
+prepare_case cleanup-failed
+export MOCK_MONITORING_FAIL=true
+export MOCK_FAIL_CLEAN_NODE=cleanup-failed-server-1
+cp "${HOME}/.kube/config" "${TMP_DIR}/monitoring-before-config"
+create_case cleanup-failed 2 n
+cluster_dir="${K3S_VM_LAB_HOME}/generated/clusters/cleanup-failed"
+test -f "${cluster_dir}/cluster.env"
+test -f "${cluster_dir}/nodes.tsv"
+test -f "${cluster_dir}/kubeconfig"
+grep -q $'\tcleanup-failed\t' "${K3S_VM_LAB_HOME}/generated/clusters.tsv"
+grep -qx 'clean cleanup-failed-server-1' "${MOCK_CHIEN_DEV_LOG}"
+cmp "${TMP_DIR}/monitoring-before-config" "${HOME}/.kube/config"
+! grep -Eq '^delete |^purge$' "${MOCK_MULTIPASS_COMMANDS}"
+unset MOCK_FAIL_CLEAN_NODE
+printf 'y\n' | "${ROOT_DIR}/scripts/local-k3s" delete cleanup-failed > "${TMP_DIR}/monitoring-retry.out" 2>&1
+test ! -d "${cluster_dir}"
 
 echo 'monitoring test passed'

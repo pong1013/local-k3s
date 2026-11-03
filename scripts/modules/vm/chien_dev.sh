@@ -66,22 +66,22 @@ start_vm_node() {
   fi
 }
 
-delete_vm_node() {
+clean_vm_node() {
   local name="$1"
-  if multipass info "${name}" >/dev/null 2>&1; then
-    log_info "Deleting VM node ${name}"
-    multipass delete "${name}" >/dev/null 2>&1 || true
-  fi
-}
 
-delete_vm_node_required() {
-  local name="$1"
   if multipass info "${name}" >/dev/null 2>&1; then
-    log_info "Deleting VM node ${name}"
-    multipass delete "${name}" >/dev/null 2>&1
+    log_info "Stopping VM node ${name} before cleanup"
+    if ! multipass stop "${name}"; then
+      log_warn "Could not stop VM ${name}; cleanup was not performed."
+      return 1
+    fi
   fi
-}
 
-purge_deleted_vms() {
-  multipass purge >/dev/null 2>&1 || true
+  log_info "Cleaning VM node ${name} through chien-dev"
+  # Cluster-level confirmation already authorizes cleanup of this exact node.
+  # Keep stdin separate from nodes.tsv and provide only one confirmation.
+  if ! chien-dev clean "${name}" <<< "y"; then
+    log_warn "Could not clean VM environment ${name}. Retry after resolving the chien-dev error."
+    return 1
+  fi
 }
