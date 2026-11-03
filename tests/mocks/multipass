@@ -6,14 +6,27 @@ name="${2:-}"
 
 case "${cmd}" in
   info)
+    state="Running"
+    if [[ -n "${MOCK_VM_STATE_DIR:-}" ]]; then
+      [[ -f "${MOCK_VM_STATE_DIR}/${name}" ]] || exit 1
+      state="$(cat "${MOCK_VM_STATE_DIR}/${name}")"
+    fi
+    if [[ "${MOCK_FAIL_IP_NODE:-}" == "${name}" ]]; then
+      if [[ "${*: -2}" == "--format json" ]]; then
+        printf '{"info":{"%s":{"state":"%s","ipv4":[]}}}\n' "${name}" "${state}"
+      else
+        printf 'Name: %s\nState: %s\n' "${name}" "${state}"
+      fi
+      exit 0
+    fi
     if [[ "${*: -2}" == "--format json" ]]; then
       cat <<JSON
-{"info":{"${name}":{"state":"Running","ipv4":["192.168.64.10"]}}}
+{"info":{"${name}":{"state":"${state}","ipv4":["192.168.64.10"]}}}
 JSON
     else
       cat <<EOF
 Name:           ${name}
-State:          Running
+State:          ${state}
 IPv4:           192.168.64.10
 EOF
     fi
@@ -25,8 +38,15 @@ EOF
     exit 0
     ;;
   stop)
+    if [[ -n "${MOCK_LIFECYCLE_LOG:-}" ]]; then
+      printf 'multipass stop %s\n' "${name}" >> "${MOCK_LIFECYCLE_LOG}"
+    fi
     if [[ -n "${MOCK_MULTIPASS_LOG:-}" ]]; then
       echo "stop ${name}" >> "${MOCK_MULTIPASS_LOG}"
+    fi
+    [[ "${MOCK_FAIL_STOP_NODE:-}" != "${name}" ]] || exit 1
+    if [[ -n "${MOCK_VM_STATE_DIR:-}" ]]; then
+      printf 'Stopped\n' > "${MOCK_VM_STATE_DIR}/${name}"
     fi
     exit 0
     ;;

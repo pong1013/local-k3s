@@ -12,6 +12,7 @@ export K3S_VM_LAB_HOST_CPUS=16
 export K3S_VM_LAB_HOST_MEM_GB=64
 export K3S_VM_LAB_HOST_DISK_GB=500
 export MOCK_MULTIPASS_LOG="${TMP_DIR}/multipass.log"
+export MOCK_CHIEN_DEV_LOG="${TMP_DIR}/chien-dev.log"
 export MOCK_FAIL_WORKER_INSTALL=true
 mkdir -p "${HOME}/.kube"
 
@@ -32,9 +33,9 @@ if [[ "${status}" -eq 0 ]]; then
   exit 1
 fi
 
-grep -q "delete fail-lab-server-1" "${MOCK_MULTIPASS_LOG}"
-grep -q "delete fail-lab-worker-1" "${MOCK_MULTIPASS_LOG}"
-grep -q "purge" "${MOCK_MULTIPASS_LOG}"
+grep -q "clean fail-lab-server-1" "${MOCK_CHIEN_DEV_LOG}"
+grep -q "clean fail-lab-worker-1" "${MOCK_CHIEN_DEV_LOG}"
+! grep -Eq "^(delete|purge)( |$)" "${MOCK_MULTIPASS_LOG}"
 test -f "${K3S_VM_LAB_HOME}/generated/clusters/fail-lab/build.log"
 grep -q "Build status: failed" "${K3S_VM_LAB_HOME}/generated/clusters/fail-lab/report.md"
 

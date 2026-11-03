@@ -12,6 +12,7 @@ export K3S_VM_LAB_HOST_CPUS=16
 export K3S_VM_LAB_HOST_MEM_GB=64
 export K3S_VM_LAB_HOST_DISK_GB=500
 export MOCK_MULTIPASS_LOG="${TMP_DIR}/multipass.log"
+export MOCK_CHIEN_DEV_LOG="${TMP_DIR}/chien-dev.log"
 export MOCK_KUBECTL_LOG="${TMP_DIR}/kubectl.log"
 export MOCK_SSH_LOG="${TMP_DIR}/ssh.log"
 export NO_COLOR=1
@@ -59,9 +60,9 @@ grep -q "Cluster 'destroy-lab' VM nodes are started" "${TMP_DIR}/start.out"
 printf 'y\n' | "${ROOT_DIR}/scripts/local-k3s" delete destroy-lab >"${TMP_DIR}/delete-stopped.out"
 
 test ! -e "${cluster_dir}"
-grep -q "delete destroy-lab-server-1" "${MOCK_MULTIPASS_LOG}"
-grep -q "delete destroy-lab-worker-1" "${MOCK_MULTIPASS_LOG}"
-grep -q "purge" "${MOCK_MULTIPASS_LOG}"
+grep -q "clean destroy-lab-server-1" "${MOCK_CHIEN_DEV_LOG}"
+grep -q "clean destroy-lab-worker-1" "${MOCK_CHIEN_DEV_LOG}"
+! grep -Eq "^(delete|purge)( |$)" "${MOCK_MULTIPASS_LOG}"
 grep -q "delete-context ${context}" "${MOCK_KUBECTL_LOG}"
 
 {
@@ -77,7 +78,7 @@ delete_context="$(grep '^KUBE_CONTEXT=' "${delete_dir}/cluster.env" | cut -d= -f
 printf 'y\n' | "${ROOT_DIR}/scripts/local-k3s" delete delete-lab >"${TMP_DIR}/delete-ready.out"
 
 test ! -e "${delete_dir}"
-grep -q "delete delete-lab-server-1" "${MOCK_MULTIPASS_LOG}"
+grep -q "clean delete-lab-server-1" "${MOCK_CHIEN_DEV_LOG}"
 grep -q "delete-context ${delete_context}" "${MOCK_KUBECTL_LOG}"
 
 {
@@ -127,6 +128,6 @@ printf 'legacy-lab-server-1\tserver\t10.0.0.50\t2\t2G\t20G\n' > "${legacy_dir}/n
 
 test ! -e "${legacy_dir}"
 grep -q "adopting legacy metadata" "${TMP_DIR}/legacy-delete.out"
-grep -q "delete legacy-lab-server-1" "${MOCK_MULTIPASS_LOG}"
+grep -q "clean legacy-lab-server-1" "${MOCK_CHIEN_DEV_LOG}"
 
 echo "safe destroy test passed"

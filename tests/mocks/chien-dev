@@ -4,19 +4,43 @@ if [[ -n "${MOCK_CHIEN_DEV_LOG:-}" ]]; then
   printf '%s\n' "$*" >> "${MOCK_CHIEN_DEV_LOG}"
 fi
 
-if [[ "${1:-}" != "create" ]]; then
-  echo "mock chien-dev only supports create" >&2
-  exit 1
-fi
-
-if [[ "${ENV:-}" != "vm" ]]; then
-  echo "expected ENV=vm" >&2
-  exit 1
-fi
-
-if [[ -z "${OS:-}" || -z "${VM_CPUS:-}" || -z "${VM_MEM:-}" || -z "${VM_DISK:-}" ]]; then
-  echo "expected OS, VM_CPUS, VM_MEM, and VM_DISK" >&2
-  exit 1
-fi
-
-exit 0
+case "${1:-}" in
+  create)
+    if [[ "${ENV:-}" != "vm" ]]; then
+      echo "expected ENV=vm" >&2
+      exit 1
+    fi
+    if [[ -z "${OS:-}" || -z "${VM_CPUS:-}" || -z "${VM_MEM:-}" || -z "${VM_DISK:-}" ]]; then
+      echo "expected OS, VM_CPUS, VM_MEM, and VM_DISK" >&2
+      exit 1
+    fi
+    if [[ -n "${MOCK_VM_STATE_DIR:-}" ]]; then
+      printf 'Running\n' > "${MOCK_VM_STATE_DIR}/${2}"
+    fi
+    ;;
+  clean)
+    name="${2:?expected environment name}"
+    if [[ -n "${MOCK_LIFECYCLE_LOG:-}" ]]; then
+      printf 'chien-dev clean %s\n' "${name}" >> "${MOCK_LIFECYCLE_LOG}"
+    fi
+    if [[ "${MOCK_FAIL_CLEAN_NODE:-}" == "${name}" ]]; then
+      echo "mock chien-dev clean failed for ${name}" >&2
+      exit 1
+    fi
+    if [[ -n "${MOCK_VM_STATE_DIR:-}" && -f "${MOCK_VM_STATE_DIR}/${name}" ]]; then
+      if [[ "$(cat "${MOCK_VM_STATE_DIR}/${name}")" != Stopped ]]; then
+        echo "mock chien-dev refuses to clean running VM ${name}" >&2
+        exit 1
+      fi
+    fi
+    IFS= read -r answer
+    [[ "${answer}" =~ ^[Yy]$ ]] || exit 1
+    if [[ -n "${MOCK_VM_STATE_DIR:-}" ]]; then
+      rm -f "${MOCK_VM_STATE_DIR}/${name}"
+    fi
+    ;;
+  *)
+    echo "mock chien-dev only supports create and clean" >&2
+    exit 1
+    ;;
+esac

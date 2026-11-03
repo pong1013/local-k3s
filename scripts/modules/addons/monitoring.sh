@@ -49,18 +49,12 @@ prompt_keep_cluster_after_monitoring_failure() {
 delete_new_cluster_after_monitoring_failure() {
   local array_name="$1"
   local cluster_dir="$2"
-  local node
-  local failed=0
   local -a nodes=()
   eval "nodes=(\"\${${array_name}[@]}\")"
 
-  for node in "${nodes[@]}"; do
-    if ! multipass delete --purge "${node}"; then
-      log_warn "Could not permanently delete VM ${node}."
-      failed=1
-    fi
-  done
-  (( failed == 0 )) || return 1
+  if (( ${#nodes[@]} > 0 )); then
+    cleanup_vm_nodes "${nodes[@]}" || return 1
+  fi
 
   remove_cluster_index_entry "${CLUSTER_NAME}" || return 1
   rm -rf "${cluster_dir}"
